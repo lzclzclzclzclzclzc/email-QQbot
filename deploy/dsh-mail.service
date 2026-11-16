@@ -1,0 +1,37 @@
+[Unit]
+Description=DSH QQ 163 Mail Assistant
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=dshmail
+Group=dshmail
+WorkingDirectory=/srv/dsh-mail/workspace
+Environment=DSH_HOME=/var/lib/dsh-mail/dsh
+Environment=DSH_MAIL_STATE=/var/lib/dsh-mail/state
+Environment=DSH_MAIL_WORKSPACE=/srv/dsh-mail/workspace
+Environment=DSH_MAIL_HEALTH_PORT=3081
+Environment=DSH_MAIL_WEB_PORT=3080
+Environment=TZ=Asia/Shanghai
+Environment=PATH=/opt/dsh-mail/runtime/bin:/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=/etc/dsh-mail/secrets.env
+ExecStartPre=/usr/bin/test -r /opt/dsh-mail/release.json
+ExecStart=/opt/dsh-mail/runtime/bin/node /opt/dsh-mail/mail-assistant/scripts/start.mjs
+Restart=on-failure
+RestartSec=10s
+TimeoutStopSec=90s
+KillMode=mixed
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+ProtectHome=yes
+ReadOnlyPaths=/opt/dsh-mail
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

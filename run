@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+root=$(cd -- "$(dirname -- "$0")" && pwd -P)
+node=${DSH_MAIL_NODE:-node}
+if ! "$node" -e 'const [major, minor] = process.versions.node.split(".").map(Number); process.exit(major === 24 && minor >= 9 ? 0 : 1)' 2>/dev/null; then
+  node=$HOME/.nvm/versions/node/v24.22.2/bin/node
+fi
+if [[ $node != node && ! -x $node ]]; then
+  echo '请设置 DSH_MAIL_NODE 为 Node 24.9+（24 系列）的绝对路径。' >&2
+  exit 1
+fi
+if [[ ${1:-} == admin ]]; then
+  shift
+  exec "$node" "$root/scripts/admin.mjs" "$@"
+fi
+exec "$node" "$root/scripts/start.mjs" "$@"
