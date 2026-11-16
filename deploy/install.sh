@@ -24,7 +24,7 @@ install -d -m 0750 -o root -g dshmail /opt/dsh-mail /opt/dsh-mail/runtime /opt/d
 install -d -m 0700 -o dshmail -g dshmail /var/lib/dsh-mail /var/lib/dsh-mail/dsh /var/lib/dsh-mail/state /var/lib/dsh-mail/artifacts /srv/dsh-mail/workspace
 install -d -m 0700 -o root -g root /etc/dsh-mail
 if [[ ! -e /etc/dsh-mail/secrets.env ]]; then
-  install -m 0600 "$root/deploy/secrets.env.example" /etc/dsh-mail/secrets.env
+  install -m 0600 "$root/.env.example" /etc/dsh-mail/secrets.env
 fi
 if [[ -f /var/lib/dsh-mail/state/mail.sqlite ]]; then
   backup=$(date -u +%Y%m%dT%H%M%SZ).sqlite
@@ -44,7 +44,7 @@ cleanup() {
 trap cleanup EXIT
 cp -a "$root/node_modules" "$release_stage/node_modules"
 mkdir "$release_stage/application"
-cp -a "$root/"{lib,migrations,scripts,deploy,package.json,package-lock.json,cordis.patch.yml,config.schema.json} "$release_stage/application"
+cp -a "$root/"{lib,migrations,scripts,deploy,package.json,package-lock.json,cordis.patch.yml,config.schema.json,.env.example} "$release_stage/application"
 install -m 0750 "$node" "$release_stage/node"
 chown -R root:dshmail "$release_stage"
 chmod -R u=rwX,g=rX,o= "$release_stage"

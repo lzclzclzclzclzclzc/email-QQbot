@@ -104,7 +104,7 @@ export class Store {
       this.run('UPDATE cursor SET reconcile=? WHERE id=1', validity)
       if (previous?.reconcile !== validity) {
         this.audit('imap_uidvalidity', validity, 'reconciliation_required')
-        this.queueNotice('imap/reconcile/' + validity, null, '163 邮箱 UIDVALIDITY 已变化，扫描暂停。请在本机核对后运行恢复命令。')
+        this.queueNotice('imap/reconcile/' + validity, null, '邮箱 UIDVALIDITY 已变化，扫描暂停。请在本机核对后运行恢复命令。')
       }
     })
   }
@@ -367,7 +367,7 @@ export class Store {
       AND state IN ('QUEUED','SENDING')`, result.status, json(result), Date.now(), copy ?? null, draft.id, draft.version).changes) return
     this.run('UPDATE drafts SET state=? WHERE id=? AND version=?', result.status, draft.id, draft.version)
     const details = result.status === 'PARTIAL' ? `\n接受 ${result.accepted.join(', ')}\n拒绝 ${result.rejected.join(', ')}` : ''
-    const labels = { ACCEPTED: '163 已接受邮件', PARTIAL: '163 部分接受', UNKNOWN: 'SMTP 提交结果不明，请核对发件箱', FAILED_BEFORE_SUBMIT: 'SMTP 未成功提交' }
+    const labels = { ACCEPTED: 'SMTP 服务器已接受邮件', PARTIAL: 'SMTP 服务器部分接受', UNKNOWN: 'SMTP 提交结果不明，请核对发件箱', FAILED_BEFORE_SUBMIT: 'SMTP 未成功提交' }
     this.queueNotice(`send/${draft.id}/${draft.version}`, draft.mail,
       `D${draft.id} v${draft.version} · ${labels[result.status]}${details}${result.code ? '\n' + result.code : ''}`)
     this.audit('smtp', `D${draft.id} v${draft.version}`, result.status)

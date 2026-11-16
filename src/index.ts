@@ -9,7 +9,7 @@ import { Assistant, safeError } from './assistant.js'
 import { readConfig } from './config.js'
 import { Conversation } from './conversation.js'
 import { analyzeDeepSeekFile, analyzeDeepSeekFiles, NativeFileError, type NativeAttachment } from './deepseek-files.js'
-import { NetEase, retrySchedule } from './mail.js'
+import { ImapSmtpMailbox, retrySchedule } from './mail.js'
 import { sendQqMessage } from './qq-markdown.js'
 import { Store } from './store.js'
 import type { TextModel } from './types.js'
@@ -68,7 +68,7 @@ export function apply(ctx: RuntimeContext) {
   process.umask(0o077)
   mkdirSync(config.stateDir, { recursive: true, mode: 0o700 })
   const store = new Store(join(config.stateDir, 'mail.sqlite'))
-  const mailbox = new NetEase(config)
+  const mailbox = new ImapSmtpMailbox(config)
   const shutdown = new AbortController()
   let connectedBot: QQBot | undefined
   let started = true

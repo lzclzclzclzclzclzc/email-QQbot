@@ -1,11 +1,13 @@
 import { randomUUID } from 'node:crypto'
-import { domainToASCII } from 'node:url'
+import { closeSync, fstatSync, openSync, readFileSync } from 'node:fs'
 import { ImapFlow, type FetchMessageObject } from 'imapflow'
 import { simpleParser } from 'mailparser'
 import nodemailer from 'nodemailer'
 import { convert } from 'html-to-text'
 import { parseDocument, DomUtils } from 'htmlparser2'
 import type { Element } from 'domhandler'
+import type { MailConnection, MailLogin } from './config.js'
+import { canonicalAddress } from './runtime-utils.js'
 import type { Store } from './store.js'
 import type { Body, Envelope, Mail, Mailbox, Payload, SendResult } from './types.js'
 
@@ -88,15 +90,6 @@ export async function parseMail(source: Buffer): Promise<Body> {
 }
 
 const safeMessageId = (id: string) => /^<[^<>\s\x00-\x1f]+>$/.test(id)
-function canonicalAddress(value: string) {
-  const at = value.lastIndexOf('@')
-  if (at <= 0) return undefined
-  const local = value.slice(0, at)
-  if (local.length > 64 || !/^[a-z\d!#$%&'*+\-/=?^_\x60{|}~]+(?:\.[a-z\d!#$%&'*+\-/=?^_\x60{|}~]+)*$/i.test(local)) return undefined
-  const domain = domainToASCII(value.slice(at + 1)).toLowerCase()
-  if (domain.length > 253 || !domain.split('.').every(label => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(label))) return undefined
-  return local + '@' + domain
-}
 function addresses(list: string[], exclude: string[] = []) {
   const seen = new Set(exclude.map(x => x.toLowerCase()))
   return list.flatMap(value => {
@@ -129,26 +122,54 @@ export async function freezeMime(payload: Payload) {
 }
 
 interface Config {
-  user: string
-  auth: string
+  imap: MailConnection
+  smtp: MailConnection
   sentFolder?: string
 }
-export class NetEase implements Mailbox {
+
+function mailAuth(login: MailLogin) {
+  const { user, password, accessToken, tokenFile } = login
+  if (tokenFile) {
+    try {
+      const handle = openSync(tokenFile, 'r')
+      try {
+        const stat = fstatSync(handle)
+        if (!stat.isFile() || (stat.mode & 0o077) !== 0) throw Error('invalid token file')
+        const token = readFileSync(handle, 'utf8').trim()
+        if (!token) throw Error('empty token file')
+        return { user, accessToken: token }
+      } finally { closeSync(handle) }
+    } catch {
+      throw new MailIssue('mail_oauth_token_file_unavailable')
+    }
+  }
+  return accessToken ? { user, accessToken } : { user, pass: password }
+}
+
+export class ImapSmtpMailbox implements Mailbox {
   private clients = new Set<ImapFlow>()
-  private smtp: ReturnType<typeof nodemailer.createTransport>
-  constructor(private config: Config) {
-    this.smtp = nodemailer.createTransport({
-      host: 'smtp.163.com', port: 465, secure: true,
-      auth: { user: config.user, pass: config.auth },
+  private transports = new Set<ReturnType<typeof nodemailer.createTransport>>()
+  constructor(private config: Config) {}
+
+  private async smtp<T>(operation: (transport: ReturnType<typeof nodemailer.createTransport>) => Promise<T>) {
+    const { host, port, secure, login } = this.config.smtp
+    const credentials = mailAuth(login)
+    const auth = credentials.accessToken ? { ...credentials, type: 'OAuth2' as const } : credentials
+    const transport = nodemailer.createTransport({
+      host, port, secure, requireTLS: !secure, auth,
       disableFileAccess: true, disableUrlAccess: true,
       connectionTimeout: 12_000, greetingTimeout: 12_000, socketTimeout: 25_000, logger: false
     })
+    this.transports.add(transport)
+    try { return await operation(transport) }
+    finally { transport.close(); this.transports.delete(transport) }
   }
 
   private async imap<T>(operation: (imap: ImapFlow) => Promise<T>): Promise<T> {
+    const { host, port, secure, login } = this.config.imap
     const imap = new ImapFlow({
-      host: 'imap.163.com', port: 993, secure: true, logger: false, disableAutoIdle: true,
-      auth: { user: this.config.user, pass: this.config.auth },
+      host, port, secure, doSTARTTLS: !secure, logger: false, disableAutoIdle: true,
+      auth: mailAuth(login),
       clientInfo: { name: 'DSH Mail Assistant', version: '0.1.0' },
       connectionTimeout: 12_000, greetingTimeout: 12_000, socketTimeout: 25_000
     })
@@ -165,7 +186,10 @@ export class NetEase implements Mailbox {
       throw new MailIssue('imap_request_failed')
     } finally { imap.close(); this.clients.delete(imap) }
   }
-  close() { for (const imap of this.clients) imap.close(); this.smtp.close() }
+  close() {
+    for (const imap of this.clients) imap.close()
+    for (const transport of this.transports) transport.close()
+  }
 
   private async inbox<T>(fn: (imap: ImapFlow, validity: string) => Promise<T>) {
     return this.imap(async imap => {
@@ -215,16 +239,16 @@ export class NetEase implements Mailbox {
 
   async verify() {
     const folders = await this.imap(imap => imap.list())
-    await this.smtp.verify()
+    await this.smtp(transport => transport.verify())
     return folders.filter(folder => folder.specialUse === '\\Sent').map(folder => folder.path)
   }
 
   async send(payload: Payload, raw: string): Promise<SendResult> {
     try {
-      const response = await this.smtp.sendMail({
+      const response = await this.smtp(transport => transport.sendMail({
         envelope: { from: payload.from, to: [...payload.to, ...payload.cc] },
         raw: Buffer.from(raw, 'base64')
-      })
+      }))
       const accepted = response.accepted.map(String)
       const rejected = response.rejected.map(String)
       return {
@@ -232,6 +256,7 @@ export class NetEase implements Mailbox {
         accepted, rejected
       }
     } catch (error) {
+      if (error instanceof MailIssue) return { status: 'FAILED_BEFORE_SUBMIT', accepted: [], rejected: [], code: error.code }
       const e = error as { code?: string; command?: string; responseCode?: number }
       return smtpFailure(e)
     }

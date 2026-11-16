@@ -1,7 +1,7 @@
 import { mkdirSync, openSync, closeSync, unlinkSync, existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { backup, DatabaseSync } from 'node:sqlite'
-import { NetEase, MailIssue } from '../lib/mail.js'
+import { ImapSmtpMailbox, MailIssue } from '../lib/mail.js'
 import { Store } from '../lib/store.js'
 import { readConfig } from '../lib/config.js'
 import { loadSecrets, local } from './local-env.mjs'
@@ -17,8 +17,8 @@ process.env.DSH_MAIL_STATE ||= join(local, 'state')
 const config = readConfig()
 const path = join(config.stateDir, 'mail.sqlite')
 const needsMailbox = ['verify','reconcile'].includes(command)
-if (needsMailbox && (!config.user || !config.auth)) throw Error('请先配置 MAIL_USER 和 MAIL_AUTH_CODE')
-const mailbox = new NetEase(config)
+if (needsMailbox && !config.mailReady) throw Error('请先配置邮箱地址、IMAP 与 SMTP 主机和认证信息')
+const mailbox = new ImapSmtpMailbox(config)
 try {
   if (command === 'verify') {
     try {

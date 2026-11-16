@@ -13,7 +13,7 @@ const walk = dir => readdirSync(dir, { withFileTypes: true }).flatMap(item => {
   return item.isDirectory() ? walk(path) : [path]
 })
 const input = [
-  'package.json', 'package-lock.json', 'config.schema.json', 'cordis.patch.yml',
+  'package.json', 'package-lock.json', 'config.schema.json', 'cordis.patch.yml', '.env.example',
   'lib', 'scripts', 'deploy', 'migrations',
   'node_modules/@tencent-connect/dsh-qqbot/lib/index.js',
   'node_modules/@tencent-connect/dsh-qqbot/lib/gateway/bootstrap.js'

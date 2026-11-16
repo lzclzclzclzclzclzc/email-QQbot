@@ -21,7 +21,7 @@ export function loadSecrets() {
 export function setupLocal() {
   const path = join(local, 'secrets.env')
   mkdirSync(dirname(path), { recursive: true, mode: 0o700 })
-  try { copyFileSync(join(root, 'deploy', 'secrets.env.example'), path, constants.COPYFILE_EXCL) }
+  try { copyFileSync(join(root, '.env.example'), path, constants.COPYFILE_EXCL) }
   catch (error) { if (error.code !== 'EEXIST') throw error }
   chmodSync(path, 0o600)
   console.log(path)

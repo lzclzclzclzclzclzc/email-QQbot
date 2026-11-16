@@ -1,7 +1,7 @@
 {
   "name": "dsh-mail-assistant",
-  "version": "0.1.8",
-  "description": "163 IMAP/SMTP and QQ C2C mail assistant for DeepSeek Harness",
+  "version": "0.2.0",
+  "description": "IMAP/SMTP and QQ C2C mail assistant for DeepSeek Harness",
   "type": "module",
   "engines": {
     "node": ">=24.9.0 <25"
@@ -13,6 +13,7 @@
     "migrations",
     "cordis.patch.yml",
     "config.schema.json",
+    ".env.example",
     "scripts/extract-office.py",
     "README.md"
   ],
