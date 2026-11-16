@@ -1,6 +1,6 @@
-# DSH QQ 163 邮件助手
+# DSH QQ 邮件助手
 
-单账号 163 邮箱，单个 QQ 官方机器人，只处理绑定所有者的私聊。本机的独立 DSH Web profile 提供模型配置和邮件工作台。
+每个实例接入一个提供 IMAP 和 SMTP 的邮箱和一个 QQ 官方机器人，处理绑定所有者的私聊。本机的独立 DSH Web profile 提供模型配置和邮件工作台。
 
 这台机器已安装并启用 `dsh-mail.service`，已完成 QQ 所有者绑定并建立新邮件收件基线。维护配置时使用 `sudoedit /etc/dsh-mail/secrets.env`，保存后执行 `sudo systemctl restart dsh-mail.service`。以下本机启动说明适用于开发测试，使用相同端口前先停止系统服务。
 
@@ -12,11 +12,11 @@
 
 ### 真实联调
 
-1. 在 163 网页设置启用 IMAP/SMTP，生成客户端授权码。填写 `MAIL_USER` 和 `MAIL_AUTH_CODE`。运行 `./run admin verify` 验证 IMAP 登录、SMTP 认证和 Sent 目录声明。这个命令不投递测试邮件。
+1. 在服务商设置启用 IMAP 和 SMTP。按 `.env.example` 填完整邮箱地址、服务器和凭据。密码或应用专用密码填 `MAIL_PASSWORD`，现有 163 可继续使用 `MAIL_AUTH_CODE` 及默认服务器。两种协议的主机、端口、TLS 模式和登录名都可以分别设置。OAuth2 用户可填写各协议的访问令牌，或提供由外部工具刷新且权限为 `600` 的令牌文件。运行 `./run admin verify` 验证 IMAP 登录、SMTP 认证和 Sent 目录声明。该命令只连接认证。
 2. 在 QQ 机器人管理端取得 AppID 和 AppSecret，填写 `QQBOT_APPID` 和 `QQBOT_SECRET`。若已有这个机器人的所有者 OpenID，直接填 `QQ_OWNER_OPENID`。否则在终端执行 `openssl rand -hex 16`，将输出填入 `QQ_ENROLL_CODE`。保持 `MAIL_LIVE=0` 和空的 `QQ_OWNER_OPENID`，重启后由你的 QQ 私聊向机器人发送「绑定 随机码」，两个字段中间是空格。收到成功回复后，从 `.local/state/qq-owner.openid` 读取 OpenID 并填入。系统部署改用 `sudo cat /var/lib/dsh-mail/state/qq-owner.openid`。清除 `QQ_ENROLL_CODE`，再重启。更换机器人或所有者时使用独立数据库。
 3. 使用 DeepSeek API 可在本地填写 `DEEPSEEK_API_KEY`，默认路由取自这个 DSH Web profile 的当前默认模型。也可在独立 Web profile 中配置其他 DSH 支持的模型。翻译和回复生成会把所选邮件的正文交给该模型服务。默认每天最多 1,000 次模型请求，可用 `DSH_MAIL_MODEL_CALLS_DAILY` 修改。
-4. QQ 客户端允许机器人主动发消息。完成服务器配置时将 `MAIL_LIVE` 改为 `1` 并重启。首次扫描只记录 INBOX 的当前 UID 边界。部分 163 服务器不返回 UIDNEXT，服务会只读查询最后一封仍在 INBOX 的邮件的 UID。之后沿用已经记录的最高 UID。等健康页显示一次成功扫描后，再从指定测试邮箱向 163 发入测试邮件。邀请机器人之前确认测试邮箱及回复内容，阅完预览后在 QQ 私聊确认。
-5. 用实际发信结果确认是否需要独立保存 Sent 副本。仅在确认 163 无自动副本后，填写已实测的 `MAIL_SENT_FOLDER`。后续 SMTP 已接受结果与 IMAP 副本使用分开的记录。
+4. QQ 客户端允许机器人主动发消息。完成服务器配置时将 `MAIL_LIVE` 改为 `1` 并重启。首次扫描只记录 INBOX 的当前 UID 边界。服务器没有返回 UIDNEXT 时，服务会只读查询最后一封仍在 INBOX 的邮件。之后沿用已经记录的最高 UID。等健康页显示一次成功扫描后，再发送测试邮件。回复前在 QQ 私聊核对预览。
+5. 邮箱不会自动保存已发送副本时，可填写实测的 `MAIL_SENT_FOLDER`。SMTP 接收结果与 IMAP 副本使用分开的记录。
 
 ### QQ 对话
 
@@ -44,7 +44,7 @@
 | 取消 D1、忽略 M1、重试 M1 | 取消未提交草稿、忽略本地显示、重新排队分析 |
 | 暂停通知、恢复通知 | 控制 QQ 主动通知，积压较多时合并编号 |
 
-主动通知只推送概要。可在 QQ 说「给我看这封邮件的全文」按需查看。概要、详情、全文与草稿预览保留完整内容，在一条消息中送达。QQ 平台允许时使用原生 Markdown。QQ 拒绝 Markdown 时尝试纯文本，QQ 明确拒绝消息长度时用一份 TXT 传送完整内容。发送回执中的「163 已接受」表示 SMTP 服务器已接收。
+主动通知只推送概要。可在 QQ 说「给我看这封邮件的全文」按需查看。概要、详情、全文与草稿预览保留完整内容，在一条消息中送达。QQ 平台允许时使用原生 Markdown。QQ 拒绝 Markdown 时尝试纯文本，QQ 明确拒绝消息长度时用一份 TXT 传送完整内容。发送回执会显示 SMTP 服务器是否接受了邮件。
 
 ## Ubuntu 常驻部署
 
