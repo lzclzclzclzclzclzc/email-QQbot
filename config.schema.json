@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DSH Mail Assistant runtime configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "MAIL_LIVE": { "enum": ["0", "1"], "default": "0" },
+    "MAIL_USER": { "type": "string", "pattern": "^$|^[^@\\s]+@163\\.com$" },
+    "MAIL_AUTH_CODE": { "type": "string", "writeOnly": true },
+    "MAIL_SENT_FOLDER": { "type": "string" },
+    "QQBOT_APPID": { "type": "string" },
+    "QQBOT_SECRET": { "type": "string", "writeOnly": true },
+    "QQ_OWNER_OPENID": { "type": "string", "pattern": "^[A-Za-z0-9_-]*$" },
+    "QQ_ENROLL_CODE": { "type": "string", "pattern": "^$|^[a-fA-F0-9]{32,64}$", "writeOnly": true },
+    "DEEPSEEK_API_KEY": { "type": "string", "writeOnly": true },
+    "DSH_HOME": { "type": "string" },
+    "DSH_MAIL_STATE": { "type": "string" },
+    "DSH_MAIL_WORKSPACE": { "type": "string" },
+    "DSH_MAIL_WEB_PORT": { "type": "integer", "minimum": 1024, "maximum": 65535, "default": 3080 },
+    "DSH_MAIL_HEALTH_PORT": { "type": "integer", "minimum": 1024, "maximum": 65535, "default": 3081 },
+    "DSH_MAIL_MODEL_PROVIDER": { "type": "string" },
+    "DSH_MAIL_MODEL_NAME": { "type": "string" },
+    "DSH_MAIL_MODEL_CALLS_DAILY": { "type": "integer", "minimum": 1, "default": 1000 }
+  }
+}
