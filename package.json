@@ -11,10 +11,11 @@
   "files": [
     "lib",
     "migrations",
+    "run",
+    "scripts",
     "cordis.patch.yml",
     "config.schema.json",
     ".env.example",
-    "scripts/extract-office.py",
     "README.md"
   ],
   "dsh": {
@@ -28,8 +29,7 @@
     }
   },
   "scripts": {
-    "build": "tsc && node scripts/patch-qq.mjs",
-    "test": "node --test test/*.test.mjs",
+    "postinstall": "node scripts/patch-qq.mjs",
     "start": "node scripts/start.mjs"
   },
   "dependencies": {
@@ -63,13 +63,6 @@
     "imapflow": "2.12.1",
     "mailparser": "3.14.4",
     "nodemailer": "10.6.0"
-  },
-  "devDependencies": {
-    "@types/html-to-text": "9.0.4",
-    "@types/mailparser": "3.9.0",
-    "@types/node": "24.19.2",
-    "@types/nodemailer": "8.0.2",
-    "typescript": "5.9.3"
   },
   "overrides": {
     "@tencent-connect/qqbot-nodejs": "1.0.5"

@@ -35,7 +35,7 @@ const managed = new Map([
   ['dsh-mail-assistant', root]
 ])
 const gateway = readFileSync(join(managed.get('@tencent-connect/dsh-qqbot'), 'lib', 'gateway', 'bootstrap.js'), 'utf8')
-if (!gateway.includes('DSH_MAIL_ASSISTANT_0_1')) throw Error('QQ 网关补丁未就绪，请运行 npm run build')
+if (!gateway.includes('DSH_MAIL_ASSISTANT_0_1')) throw Error('QQ 网关补丁未就绪，请运行 npm ci --omit=dev')
 const marker = join(env.DSH_HOME, '.dsh-mail-profile')
 if (!existsSync(marker) && existsSync(manifestPath))
   throw Error('DSH_HOME 已有其他 Web profile，请使用邮件助手专用目录')
