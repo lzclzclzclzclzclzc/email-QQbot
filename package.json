@@ -10,7 +10,7 @@
   "exports": "./lib/index.js",
   "files": [
     "lib",
-    "migrations",
+    "schema.sql",
     "run",
     "scripts",
     "cordis.patch.yml",

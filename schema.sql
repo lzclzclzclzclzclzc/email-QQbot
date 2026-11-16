@@ -8,6 +8,7 @@ CREATE TABLE mails (
   received INTEGER NOT NULL, envelope TEXT NOT NULL, body TEXT, translation TEXT,
   status TEXT NOT NULL DEFAULT 'waiting', ignored INTEGER NOT NULL DEFAULT 0,
   attempts INTEGER NOT NULL DEFAULT 0, next_at INTEGER NOT NULL DEFAULT 0, issue TEXT,
+  summary_markdown TEXT, original_translation TEXT,
   UNIQUE(validity, uid)
 );
 CREATE INDEX mail_queue ON mails(status, next_at, id);
@@ -23,7 +24,7 @@ CREATE TABLE drafts (
 CREATE TABLE confirmations (
   draft INTEGER NOT NULL, version INTEGER NOT NULL, hash TEXT NOT NULL,
   owner TEXT NOT NULL, chat TEXT NOT NULL, preview_event TEXT NOT NULL, expires INTEGER NOT NULL,
-  token_hash TEXT NOT NULL, used INTEGER,
+  token_hash TEXT NOT NULL, used INTEGER, previewed INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY(draft, version), FOREIGN KEY(draft, version) REFERENCES drafts(id, version)
 );
 CREATE TABLE sends (
@@ -35,7 +36,8 @@ CREATE TABLE sends (
 CREATE TABLE notices (
   key TEXT PRIMARY KEY, mail INTEGER REFERENCES mails(id), text TEXT NOT NULL, file_name TEXT,
   state TEXT NOT NULL DEFAULT 'queued', attempts INTEGER NOT NULL DEFAULT 0, touched INTEGER NOT NULL,
-  next_at INTEGER NOT NULL DEFAULT 0, platform_id TEXT, issue TEXT
+  next_at INTEGER NOT NULL DEFAULT 0, platform_id TEXT, issue TEXT,
+  platform_ref TEXT, is_markdown INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX notice_queue ON notices(state, next_at, touched);
 CREATE TABLE inbound_events (event TEXT PRIMARY KEY, received INTEGER NOT NULL);
