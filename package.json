@@ -1,0 +1,76 @@
+{
+  "name": "dsh-mail-assistant",
+  "version": "0.1.8",
+  "description": "163 IMAP/SMTP and QQ C2C mail assistant for DeepSeek Harness",
+  "type": "module",
+  "engines": {
+    "node": ">=24.9.0 <25"
+  },
+  "main": "./lib/index.js",
+  "exports": "./lib/index.js",
+  "files": [
+    "lib",
+    "migrations",
+    "cordis.patch.yml",
+    "config.schema.json",
+    "scripts/extract-office.py",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "compatibility": {
+      "dshReleases": {
+        "0.2.2-rc.1": "compatible"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc && node scripts/patch-qq.mjs",
+    "test": "node --test test/*.test.mjs",
+    "start": "node scripts/start.mjs"
+  },
+  "dependencies": {
+    "@deepseek-ai/cordis-plugin-group": "1.1.0",
+    "@deepseek-ai/dsh": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-anonymous-user-id": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-attachment": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-bash-local": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-compaction": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-deepseek-account": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-fs": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-jobs": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-llm-deepseek": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-ptc-runtime": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-sandbox": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-scope": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-sdk-protocol": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-session-persistence": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-session-query": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-session-telemetry": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-session-title-llm": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-shell": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-spill": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-util-workspace-path": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-workflow": "0.2.2-rc.1",
+    "@tencent-connect/dsh-qqbot": "0.5.5",
+    "@tencent-connect/qqbot-nodejs": "1.0.5",
+    "dsh-email": "0.25.0",
+    "html-to-text": "10.0.1",
+    "htmlparser2": "12.0.0",
+    "imapflow": "2.12.1",
+    "mailparser": "3.14.4",
+    "nodemailer": "10.6.0"
+  },
+  "devDependencies": {
+    "@types/html-to-text": "9.0.4",
+    "@types/mailparser": "3.9.0",
+    "@types/node": "24.19.2",
+    "@types/nodemailer": "8.0.2",
+    "typescript": "5.9.3"
+  },
+  "overrides": {
+    "@tencent-connect/qqbot-nodejs": "1.0.5"
+  }
+}
